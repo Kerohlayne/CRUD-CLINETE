@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Crud de Clientes</title>
+</head>
+<body> 
+    <h1>Cadastro de clientes</h1> 
+    <form id="clienteForm"> 
+        <input type="hidden" id="clienteId"/>
+        <input type="text" id="nome" placeholder="Nome" required/>
+        <input type="text" id="email" placeholder="Email" required/> 
+        <button type="submit">Salvar</button> 
+    </form> 
+
+    <h2>Lista de clientes</h2> 
+    <ul id="listadeClientes"></ul> 
+
+    <script>
+        const form = document.getElementById('clienteForm');
+        const lista = document.getElementById('listadeClientes'); // corrigido ID
+        const nomeInput = document.getElementById('nome');
+        const emailInput = document.getElementById('email');
+        const idInput = document.getElementById('clienteId'); 
+
+        async function carregar() { 
+            const res = await fetch('/api/clientes');
+            const cliente = await res.json();
+            lista.innerHTML = '';
+            cliente.forEach(cliente => {  // corrigido cliente.array para cliente
+                const li = document.createElement('li');
+                li.textContent = `${cliente.nome} - ${cliente.email}`;  // corrigido "cleinte"
+                li.innerHTML += ` <button onclick="editar(${cliente.id},'${cliente.nome}','${cliente.email}')">Editar</button>
+                <button onclick="deletar(${cliente.id})">Excluir</button>`;
+                lista.appendChild(li);
+            });
+        } 
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const nome = nomeInput.value;
+            const email = emailInput.value;
+            const id = idInput.value; 
+            const payload = { nome, email };
+
+            if (id) { 
+                await fetch(`/api/clientes/${id}`, { 
+                    method: 'PUT',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify(payload) // corrigido JSON.stringfy
+                });
+            } else { 
+                await fetch('/api/clientes', {  // corrigido endpoint '/api/cliente'
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify(payload) // corrigido JSON.stringfy
+                }); 
+            }
+
+            form.reset(); // limpa o formulário
+            carregar();   // recarrega a lista
+        }
+
+        async function deletar(id) {
+            await fetch(`/api/clientes/${id}`, { method: 'DELETE' }); 
+            carregar();
+        }
+
+        function editar(id, nome, email) {
+            idInput.value = id; // corrigido "IdInput" para "idInput"
+            nomeInput.value = nome;
+            emailInput.value = email; // corrigido "emailInput = email"
+        } 
+
+        carregar();
+    </script>
+</body>
+</html>
